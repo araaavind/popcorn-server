@@ -13,10 +13,30 @@ app.get('/', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-    console.log("A user connected");
-    io.emit('connected', { body: "A user joined!" });
+    socket.on('change_nickname', (packet) => {
+        socket.to(packet.sessionId).emit('message', packet);
+    });
+
+    socket.on('create_session', (packet) => {
+        socket.join(packet.sessionId);
+        socket.to(packet.sessionId).emit('message', packet);
+    });
+
+    socket.on('join_session', (packet) => {
+        socket.join(packet.sessionId);
+        socket.to(packet.sessionId).emit('message', packet);
+    });
+
+    socket.on('leave_session', (packet) => {
+        socket.to(packet.sessionId).emit('message', packet);
+        socket.leave(packet.sessionId);
+    });
+
+    socket.on('message', (packet) => {
+        socket.to(packet.sessionId).emit('message', packet);
+    })
+
     socket.on('disconnect', () => {
-        console.log("A user disconnected");
-        io.emit('disconnected', { body: "A user left!" });
+        console.log(socket.id + " disconnected");
     });
 });
