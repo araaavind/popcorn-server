@@ -9,7 +9,7 @@ const server = app.listen(port, () => console.log(`listening at ${port}`));
 const io = socket(server);
 
 app.get('/', (req, res) => {
-    res.send("Popcorn video player server");
+    res.send("Popcorn video player server running...");
 });
 
 io.on('connection', (socket) => {
@@ -34,9 +34,9 @@ io.on('connection', (socket) => {
 
     socket.on('message', (packet) => {
         socket.to(packet.sessionId).emit('message', packet);
-    })
+    });
 
-    socket.on('disconnect', () => {
-        console.log(socket.id + " disconnected");
+    socket.on('playback_sync', (packet) => {
+        socket.to(packet.sessionId).emit('playback_sync', packet);
     });
 });
