@@ -12,24 +12,30 @@ app.get('/', (req, res) => {
     res.send("Popcorn video player server running...");
 });
 
+let socketMap = {};
+
 io.on('connection', (socket) => {
     socket.on('change_nickname', (packet) => {
         socket.to(packet.sessionId).emit('message', packet);
+        socketMap[socket.id] = packet.nickname;
     });
 
     socket.on('create_session', (packet) => {
         socket.join(packet.sessionId);
         socket.to(packet.sessionId).emit('message', packet);
+        socketMap[socket.id] = packet.nickname;
     });
 
     socket.on('join_session', (packet) => {
         socket.join(packet.sessionId);
         socket.to(packet.sessionId).emit('message', packet);
+        socketMap[socket.id] = packet.nickname;
     });
 
     socket.on('leave_session', (packet) => {
         socket.to(packet.sessionId).emit('message', packet);
         socket.leave(packet.sessionId);
+        delete socketMap[socket.id];
     });
 
     socket.on('message', (packet) => {
@@ -38,5 +44,13 @@ io.on('connection', (socket) => {
 
     socket.on('playback_sync', (packet) => {
         socket.to(packet.sessionId).emit('playback_sync', packet);
+    });
+
+    socket.on('disconnecting', () => {
+        let room = Object.keys(socket.rooms)[1];
+        if(room) {
+            socket.to(room).emit('lost_connection', socketMap[socket.id] + " lost connection.")
+        }
+        delete socketMap[socket.id];
     });
 });
