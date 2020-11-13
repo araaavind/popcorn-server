@@ -38,6 +38,10 @@ io.on('connection', (socket) => {
         delete socketMap[socket.id];
     });
 
+    socket.on('typing_indicator', (packet) => {
+        socket.to(packet.sessionId).emit('typing_indicator', packet);
+    });
+
     socket.on('message', (packet) => {
         socket.to(packet.sessionId).emit('message', packet);
     });
